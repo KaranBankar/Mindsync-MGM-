@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "145547288365",
+    "project_id": "student-app-35ce2",
+    "storage_bucket": "student-app-35ce2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145547288365:android:27259ecc03d6a525d8bda4",
+        "android_client_info": {
+          "package_name": "com.koshpal.studentapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQJhrxC4-CBR7_sXyv_y5-a14tnFmLwW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
