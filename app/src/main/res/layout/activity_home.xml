@@ -220,6 +220,75 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- AI Assistant Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAiAssistant"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:cardUseCompatPadding="true"
+            app:strokeColor="@color/primary_light"
+            app:strokeWidth="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardMyBookings">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_ai_assistant"
+                    android:layout_marginEnd="16dp"
+                    app:tint="@color/success_color" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI Assistant"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="24/7 instant help &amp; guidance"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAiAssistant"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Chat"
+                    android:textSize="12sp"
+                    android:textColor="@color/success_color"
+                    app:backgroundTint="@color/white"
+                    app:strokeColor="@color/success_color"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="18dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Footer -->
         <TextView
             android:id="@+id/tvFooter"
@@ -234,7 +303,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardMyBookings" />
+            app:layout_constraintTop_toBottomOf="@id/cardAiAssistant" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

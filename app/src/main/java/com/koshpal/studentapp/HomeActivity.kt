@@ -22,6 +22,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var cardBookCounselor: MaterialCardView
     private lateinit var btnBookCounselor: MaterialButton
     private lateinit var btnMyBookings: MaterialButton
+    private lateinit var btnAiAssistant: MaterialButton
     private lateinit var btnLogout: MaterialButton
     
     private lateinit var sharedPreferences: SharedPreferences
@@ -64,6 +65,7 @@ class HomeActivity : AppCompatActivity() {
         cardBookCounselor = findViewById(R.id.cardBookCounselor)
         btnBookCounselor = findViewById(R.id.btnBookCounselor)
         btnMyBookings = findViewById(R.id.btnMyBookings)
+        btnAiAssistant = findViewById(R.id.btnAiAssistant)
         btnLogout = findViewById(R.id.btnLogout)
     }
     
@@ -94,8 +96,12 @@ class HomeActivity : AppCompatActivity() {
         
         btnMyBookings.setOnClickListener {
             Log.d(TAG, "My Bookings clicked")
-            // TODO: Navigate to bookings list activity
-            Toast.makeText(this, "My Bookings feature coming soon!", Toast.LENGTH_SHORT).show()
+            navigateToMyBookings()
+        }
+        
+        btnAiAssistant.setOnClickListener {
+            Log.d(TAG, "AI Assistant clicked")
+            navigateToAiAssistant()
         }
         
         btnLogout.setOnClickListener {
@@ -109,6 +115,21 @@ class HomeActivity : AppCompatActivity() {
             putExtra("USER_NAME", userName)
             putExtra("USER_MOBILE", userMobile)
         }
+        startActivity(intent)
+    }
+    
+    private fun navigateToMyBookings() {
+        val intent = Intent(this, MyBookingsActivity::class.java).apply {
+            putExtra("USER_NAME", userName)
+            putExtra("USER_MOBILE", userMobile)
+        }
+        startActivity(intent)
+    }
+    
+    private fun navigateToAiAssistant() {
+        val intent = Intent(this, ChatbotActivity::class.java)
+        intent.putExtra("USER_NAME", userName)
+        intent.putExtra("USER_MOBILE", userMobile)
         startActivity(intent)
     }
     
