@@ -1,8 +1,10 @@
 package com.koshpal.studentapp
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Patterns
+import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -13,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -29,6 +32,15 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     
     private lateinit var database: DatabaseReference
+    private lateinit var sharedPreferences: SharedPreferences
+    
+    companion object {
+        private const val TAG = "LoginActivity"
+        private const val PREF_NAME = "StudentAppPrefs"
+        private const val KEY_IS_LOGGED_IN = "isLoggedIn"
+        private const val KEY_USER_NAME = "userName"
+        private const val KEY_USER_MOBILE = "userMobile"
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,13 +53,73 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
         
+        initSharedPreferences()
+        
+        // Check if user is already logged in
+        if (isUserLoggedIn()) {
+            navigateToHomeDirectly()
+            return
+        }
+        
         initFirebase()
         initViews()
         setupClickListeners()
     }
     
+    private fun initSharedPreferences() {
+        sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    }
+    
+    private fun isUserLoggedIn(): Boolean {
+        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+    }
+    
+    private fun saveUserSession(name: String, mobile: String) {
+        sharedPreferences.edit().apply {
+            putBoolean(KEY_IS_LOGGED_IN, true)
+            putString(KEY_USER_NAME, name)
+            putString(KEY_USER_MOBILE, mobile)
+            apply()
+        }
+        Log.d(TAG, "User session saved: $name, $mobile")
+    }
+    
+    private fun navigateToHomeDirectly() {
+        val userName = sharedPreferences.getString(KEY_USER_NAME, "Student") ?: "Student"
+        val userMobile = sharedPreferences.getString(KEY_USER_MOBILE, "") ?: ""
+        
+        Log.d(TAG, "User already logged in, navigating to home")
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            putExtra("USER_NAME", userName)
+            putExtra("USER_MOBILE", userMobile)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
+    }
+    
     private fun initFirebase() {
-        database = FirebaseDatabase.getInstance().reference
+        try {
+            // Initialize Firebase if not already initialized
+            FirebaseApp.initializeApp(this)
+            
+            // Get Firebase Database instance
+            val firebaseDatabase = FirebaseDatabase.getInstance()
+            database = firebaseDatabase.reference
+            
+            // Enable offline persistence (optional but recommended)
+            try {
+                firebaseDatabase.setPersistenceEnabled(true)
+            } catch (e: Exception) {
+                Log.w(TAG, "Persistence already enabled or failed to enable", e)
+            }
+            
+            Log.d(TAG, "Firebase initialized successfully")
+            Log.d(TAG, "Database URL: ${firebaseDatabase.app.options.databaseUrl}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Firebase initialization failed", e)
+            showError("Firebase initialization failed: ${e.message}")
+        }
     }
     
     private fun initViews() {
@@ -61,9 +133,11 @@ class LoginActivity : AppCompatActivity() {
     
     private fun setupClickListeners() {
         btnSubmit.setOnClickListener {
+            Log.d(TAG, "Submit button clicked")
             if (validateInputs()) {
                 val name = etName.text.toString().trim()
                 val mobile = etMobile.text.toString().trim()
+                Log.d(TAG, "Registering student: Name=$name, Mobile=$mobile")
                 registerStudent(name, mobile)
             }
         }
@@ -103,32 +177,44 @@ class LoginActivity : AppCompatActivity() {
             isValid = false
         }
         
+        Log.d(TAG, "Input validation result: $isValid")
         return isValid
     }
     
     private fun registerStudent(name: String, mobile: String) {
         showLoading(true)
+        Log.d(TAG, "Starting registration process...")
         
         // Check if mobile number already exists
         database.child("students").child(mobile)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    Log.d(TAG, "Database query completed. Exists: ${snapshot.exists()}")
+                    
                     if (snapshot.exists()) {
                         // Mobile number already exists, navigate to home
                         showLoading(false)
                         val existingStudent = snapshot.getValue(Student::class.java)
+                        Log.d(TAG, "Existing student found: ${existingStudent?.name}")
+                        
                         if (existingStudent != null) {
+                            showSuccess("Welcome back, ${existingStudent.name}!")
+                            saveUserSession(existingStudent.name, mobile)
                             navigateToHome(existingStudent.name, mobile)
                         } else {
+                            showSuccess("Welcome back!")
+                            saveUserSession(name, mobile)
                             navigateToHome(name, mobile)
                         }
                     } else {
                         // Mobile number doesn't exist, create new student
+                        Log.d(TAG, "New student, saving to database...")
                         saveStudentToDatabase(name, mobile)
                     }
                 }
                 
                 override fun onCancelled(error: DatabaseError) {
+                    Log.e(TAG, "Database query cancelled", error.toException())
                     showLoading(false)
                     showError("Database error: ${error.message}")
                 }
@@ -136,21 +222,41 @@ class LoginActivity : AppCompatActivity() {
     }
     
     private fun saveStudentToDatabase(name: String, mobile: String) {
+        Log.d(TAG, "Saving student to database...")
         val student = Student.createStudent(name, mobile)
+        
+        Log.d(TAG, "Student object created: $student")
         
         database.child("students").child(mobile).setValue(student)
             .addOnSuccessListener {
+                Log.d(TAG, "Student saved successfully to Firebase")
                 showLoading(false)
                 showSuccess("Registration successful!")
+                saveUserSession(name, mobile)
                 navigateToHome(name, mobile)
             }
             .addOnFailureListener { exception ->
+                Log.e(TAG, "Failed to save student to Firebase", exception)
                 showLoading(false)
                 showError("Registration failed: ${exception.message}")
+                
+                // Additional debugging
+                when (exception) {
+                    is com.google.firebase.database.DatabaseException -> {
+                        showError("Database Exception: Check your Firebase rules and internet connection")
+                    }
+                    is java.net.UnknownHostException -> {
+                        showError("Network Error: Please check your internet connection")
+                    }
+                    else -> {
+                        showError("Unknown error: ${exception.javaClass.simpleName}")
+                    }
+                }
             }
     }
     
     private fun navigateToHome(name: String, mobile: String) {
+        Log.d(TAG, "Navigating to HomeActivity")
         val intent = Intent(this, HomeActivity::class.java).apply {
             putExtra("USER_NAME", name)
             putExtra("USER_MOBILE", mobile)
@@ -174,9 +280,11 @@ class LoginActivity : AppCompatActivity() {
     
     private fun showSuccess(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Log.d(TAG, "Success: $message")
     }
     
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        Log.e(TAG, "Error: $message")
     }
 }

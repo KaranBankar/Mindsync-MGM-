@@ -15,6 +15,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentApp">
         <activity
+            android:name=".CounselorBookingActivity"
+            android:exported="false"
+            android:parentActivityName=".HomeActivity" />
+        <activity
             android:name=".HomeActivity"
             android:exported="false" />
         <activity
